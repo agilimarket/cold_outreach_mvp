@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Mensagens Cold Outreach - Moda</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">
+                <span class="icon">📧</span>
+                Gerador de Cold Outreach
+            </h1>
+            <p class="subtitle">Mensagens personalizadas para lojas de moda</p>
+        </header>
+
+        <main class="main-content">
+            <div class="input-section">
+                <label for="urls-input" class="input-label">
+                    <span class="label-text">URLs das Lojas</span>
+                    <span class="label-hint">Cole 1 URL por linha (sites ou Instagram)</span>
+                </label>
+                <textarea 
+                    id="urls-input" 
+                    class="urls-textarea"
+                    placeholder="https://www.usemegavest.com.br&#10;https://instagram.com/lojapraiabeach&#10;https://www.minhaloja.com.br"
+                    rows="8"
+                ></textarea>
+            </div>
+
+            <div class="action-section">
+                <button id="generate-btn" class="generate-button">
+                    <span class="button-icon">🚀</span>
+                    <span class="button-text">Analisar e Gerar CSV</span>
+                </button>
+            </div>
+
+            <div class="status-section">
+                <div id="status-display" class="status-display">
+                    <span class="status-icon">💡</span>
+                    <span class="status-text">Pronto para processar URLs</span>
+                </div>
+                <div id="progress-bar" class="progress-bar hidden">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="results-section hidden" id="results-section">
+                <h3 class="results-title">Resultados</h3>
+                <div class="results-summary" id="results-summary"></div>
+                <div class="download-area" id="download-area"></div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <p class="footer-text">
+                    <span class="footer-icon">⚡</span>
+                    DataFashion Marketing - Especialistas em Tráfego & SEO para Moda
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
