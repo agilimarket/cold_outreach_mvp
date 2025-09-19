@@ -3,28 +3,22 @@ class ColdOutreachGenerator {
     constructor() {
         this.processedUrls = [];
         this.ignoredUrls = [];
-        this.allUrls = []; // Todas as URLs, incluindo as não processadas ainda
-        this.currentIndex = 0; // Índice da URL atual sendo processada
+        this.allUrls = [];
+        this.currentIndex = 0;
         this.isProcessing = false;
         this.isPaused = false;
     }
 
-    // Extrai o nome da loja a partir da URL
     extractStoreName(url) {
         try {
-            // Remove protocolo
             let cleanUrl = url.replace(/^https?:\/\//, '');
-            
-            // Remove www.
             cleanUrl = cleanUrl.replace(/^www\./, '');
             
-            // Se for Instagram, extrai o handle
             if (cleanUrl.includes('instagram.com/')) {
                 const handle = cleanUrl.replace(/.*instagram\.com\//, '').split('/')[0];
                 return handle;
             }
             
-            // Para outros sites, pega apenas o domínio principal
             const domain = cleanUrl.split('/')[0].split('.')[0];
             return domain;
         } catch (error) {
@@ -32,7 +26,6 @@ class ColdOutreachGenerator {
         }
     }
 
-    // Valida se a URL é válida
     isValidUrl(url) {
         try {
             const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
@@ -44,7 +37,6 @@ class ColdOutreachGenerator {
         }
     }
 
-    // Aplica regras de análise simulada
     analyzeStore(storeName) {
         const lowerName = storeName.toLowerCase();
         
@@ -69,7 +61,6 @@ class ColdOutreachGenerator {
         }
     }
 
-    // Gera a mensagem personalizada
     generateMessage(storeName, analysis) {
         const template = `Oi, ${analysis.contato},
 
@@ -92,7 +83,6 @@ Especialista em Tráfego & SEO para Moda`;
         return template;
     }
 
-    // Processa uma única URL
     processUrl(url) {
         const trimmedUrl = url.trim();
         
@@ -122,11 +112,10 @@ Especialista em Tráfego & SEO para Moda`;
         return result;
     }
 
-    // Processa lista de URLs
     async processUrls(urlList) {
         this.processedUrls = [];
         this.ignoredUrls = [];
-        this.allUrls = urlList.split('\\n').filter(url => url.trim());
+        this.allUrls = urlList.split('\n').filter(url => url.trim());
         this.currentIndex = 0;
         this.isProcessing = true;
         this.isPaused = false;
@@ -141,17 +130,14 @@ Especialista em Tráfego & SEO para Moda`;
         while (this.currentIndex < this.allUrls.length && this.isProcessing && !this.isPaused) {
             const url = this.allUrls[this.currentIndex];
             try {
-                const result = this.processUrl(url);
-                if (result) {
-                    // A URL já é adicionada a processedUrls dentro de processUrl
-                }
+                this.processUrl(url);
             } catch (error) {
                 console.error(`Erro ao processar URL ${url}:`, error);
-                this.ignoredUrls.push(url); // Adiciona a URL com erro às ignoradas
+                this.ignoredUrls.push(url);
             }
             this.currentIndex++;
             this.updateProgress(this.currentIndex, this.allUrls.length);
-            await new Promise(resolve => setTimeout(resolve, 100)); // Simula processamento assíncrono
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
     }
 
@@ -167,7 +153,6 @@ Especialista em Tráfego & SEO para Moda`;
         this.isProcessing = false;
     }
 
-    // Atualiza o progresso na interface
     updateProgress(current, total) {
         const progressFill = document.querySelector('.progress-fill');
         const statusText = document.querySelector('.status-text');
@@ -182,7 +167,6 @@ Especialista em Tráfego & SEO para Moda`;
         }
     }
 
-    // Gera CSV
     generateCSV(data) {
         const headers = ['URL', 'Contato', 'Conquista', 'Oportunidade', 'Mensagem'];
         const csvContent = [headers.join(',')];
@@ -201,7 +185,6 @@ Especialista em Tráfego & SEO para Moda`;
         return csvContent.join('\n');
     }
 
-    // Faz download do CSV
     downloadCSV(csvContent) {
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
@@ -217,7 +200,6 @@ Especialista em Tráfego & SEO para Moda`;
         }
     }
 
-    // Retorna estatísticas do processamento
     getStats() {
         return {
             processed: this.processedUrls.length,
@@ -238,52 +220,123 @@ document.addEventListener('DOMContentLoaded', function() {
     const progressContainer = document.getElementById('progress-bar');
     const resultsSection = document.getElementById('results-section');
 
-    // Event listener para o botão de Gerar
-    generateBtn.addEventListener('click', async function() {
-    const urls = urlInput.value.trim();
-    
-    if (!urls) {
-        showStatus('Por favor, insira pelo menos uma URL.', 'error');
-        return;
+    // Função para mostrar status (movida para escopo correto)
+    function showStatus(message, type) {
+        const statusText = statusDiv.querySelector('.status-text');
+        const statusIcon = statusDiv.querySelector('.status-icon');
+        
+        if (statusText) statusText.textContent = message;
+        
+        statusDiv.className = 'status-display';
+        if (type === 'success') {
+            statusDiv.classList.add('success');
+            statusIcon.textContent = '✅';
+        } else if (type === 'error') {
+            statusDiv.classList.add('error');
+            statusIcon.textContent = '❌';
+        } else if (type === 'warning') {
+            statusDiv.classList.add('warning');
+            statusIcon.textContent = '⚠️';
+        } else {
+            statusDiv.classList.add('processing');
+            statusIcon.textContent = '⏳';
+        }
     }
 
-    // Resetar estado para nova análise
-    generator.processedUrls = [];
-    generator.ignoredUrls = [];
-    generator.currentIndex = 0;
-    generator.isPaused = false;
+    // Função para mostrar resultados
+    function showResults(results, stats) {
+        const resultsSummary = document.getElementById('results-summary');
+        
+        if (!resultsSummary) {
+            console.error('Elemento #results-summary não encontrado.');
+            return;
+        }
 
-    generateBtn.classList.add('hidden');
-    pauseResumeBtn.classList.remove('hidden');
-    pauseResumeBtn.innerHTML = '<span class="button-icon">⏸️</span><span class="button-text">Pausar</span>';
-    pauseResumeBtn.style.background = 'var(--warning-gradient)';
-    
-    statusDiv.classList.remove('success', 'error');
-    statusDiv.classList.add('processing');
-    showStatus('Iniciando processamento...', 'processing');
-    progressBarFill.style.width = '0%';
-    progressContainer.classList.remove('hidden');
-    resultsSection.classList.add('hidden');
+        const resultHTML = `
+            <div class="results-stats">
+                <h4>📊 Resumo do Processamento</h4>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.processed}</div>
+                        <div class="stat-label">Processadas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.ignored}</div>
+                        <div class="stat-label">Ignoradas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total}</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                </div>
+            </div>
 
-    await startProcessing(urls);
-});
+            <div class="preview-section">
+                <h4>👀 Preview das Mensagens (primeiras 3)</h4>
+                <div class="preview-list">
+                    ${results.slice(0, 3).map(result => `
+                        <div class="preview-item">
+                            <div class="preview-header">
+                                <strong>${result.url}</strong>
+                                <span class="contact-badge">${result.contato}</span>
+                            </div>
+                            <div class="preview-message">
+                                ${result.mensagem.replace(/\n/g, '<br>').substring(0, 200)}...
+                            </div>
+                        </div>
+                    `).join('')}
+                    ${results.length > 3 ? `<div class="preview-more">+ ${results.length - 3} mensagens no CSV</div>` : ''}
+                </div>
+            </div>
+        `;
 
-// Event listener para o botão de Pausar/Retomar
-pauseResumeBtn.addEventListener('click', async function() {
-    if (generator.isProcessing) {
-        generator.pause();
-        pauseResumeBtn.innerHTML = '<span class="button-icon">▶️</span><span class="button-text">Retomar</span>';
-        pauseResumeBtn.style.background = 'var(--success-gradient)';
-        showStatus('Processamento pausado.', 'warning');
-    } else if (generator.isPaused) {
-        generator.resume();
-        pauseResumeBtn.innerHTML = '<span class="button-icon">⏸️</span><span class="button-text">Pausar</span>';
-        pauseResumeBtn.style.background = 'var(--warning-gradient)';
-        showStatus('Retomando processamento...', 'processing');
+        resultsSummary.innerHTML = resultHTML;
+        resultsSection.classList.remove('hidden');
+    }
+
+    // Event listener para o botão de Pausar/Retomar (corrigido: fora do clique de gerar)
+    pauseResumeBtn.addEventListener('click', async function() {
+        if (generator.isProcessing) {
+            generator.pause();
+            pauseResumeBtn.innerHTML = '<span class="button-icon">▶️</span><span class="button-text">Retomar</span>';
+            pauseResumeBtn.style.background = 'var(--success-gradient)';
+            showStatus('Processamento pausado.', 'warning');
+        } else if (generator.isPaused) {
+            generator.isProcessing = true;
+            generator.isPaused = false;
+            pauseResumeBtn.innerHTML = '<span class="button-icon">⏸️</span><span class="button-text">Pausar</span>';
+            pauseResumeBtn.style.background = 'var(--warning-gradient)';
+            showStatus('Retomando processamento...', 'processing');
+            await generator._processUrlsInternal();
         }
     });
 
-    async function startProcessing(urls) {
+    // Event listener para o botão de Gerar (corrigido)
+    generateBtn.addEventListener('click', async function() {
+        const urls = urlInput.value.trim();
+        
+        if (!urls) {
+            showStatus('Por favor, insira pelo menos uma URL.', 'error');
+            return;
+        }
+
+        // Resetar estado
+        generator.processedUrls = [];
+        generator.ignoredUrls = [];
+        generator.currentIndex = 0;
+        generator.isPaused = false;
+
+        generateBtn.classList.add('hidden');
+        pauseResumeBtn.classList.remove('hidden');
+        pauseResumeBtn.innerHTML = '<span class="button-icon">⏸️</span><span class="button-text">Pausar</span>';
+        pauseResumeBtn.style.background = 'var(--warning-gradient)';
+        
+        statusDiv.classList.remove('success', 'error');
+        showStatus('Iniciando processamento...', 'processing');
+        progressBarFill.style.width = '0%';
+        progressContainer.classList.remove('hidden');
+        resultsSection.classList.add('hidden');
+
         try {
             await generator.processUrls(urls);
             const stats = generator.getStats();
@@ -304,89 +357,8 @@ pauseResumeBtn.addEventListener('click', async function() {
             generateBtn.classList.remove('hidden');
             pauseResumeBtn.classList.add('hidden');
             progressContainer.classList.add('hidden');
-            statusDiv.classList.remove('processing', 'warning');
         }
-    }
-
-    // Função para mostrar status
-    function showStatus(message, type) {
-        const statusText = statusDiv.querySelector('.status-text');
-        const statusIcon = statusDiv.querySelector('.status-icon');
-        
-        if (statusText) {
-            statusText.textContent = message;
-        }
-        
-        if (type === 'success') {
-            statusIcon.textContent = '✅';
-        } else if (type === 'error') {
-            statusIcon.textContent = '❌';
-        } else {
-            statusIcon.textContent = '⏳';
-        }
-    }
-
-    // Função para mostrar resultados — CORRIGIDA
-function showResults(results, stats) {
-    const resultsSummary = document.getElementById('results-summary');
-    const downloadArea = document.getElementById('download-area');
-
-    if (!resultsSummary) {
-        console.error('Elemento #results-summary não encontrado.');
-        return;
-    }
-
-    const resultHTML = `
-        <div class="results-stats">
-            <h4>📊 Resumo do Processamento</h4>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number">${stats.processed}</div>
-                    <div class="stat-label">Processadas</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${stats.ignored}</div>
-                    <div class="stat-label">Ignoradas</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${stats.total}</div>
-                    <div class="stat-label">Total</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="preview-section">
-            <h4>👀 Preview das Mensagens (primeiras 3)</h4>
-            <div class="preview-list">
-                ${results.slice(0, 3).map(result => `
-                    <div class="preview-item">
-                        <div class="preview-header">
-                            <strong>${result.url}</strong>
-                            <span class="contact-badge">${result.contato}</span>
-                        </div>
-                        <div class="preview-message">
-                            ${result.mensagem.replace(/\n/g, '<br>').substring(0, 200)}...
-                        </div>
-                    </div>
-                `).join('')}
-                ${results.length > 3 ? `<div class="preview-more">+ ${results.length - 3} mensagens no CSV</div>` : ''}
-            </div>
-        </div>
-    `;
-
-    resultsSummary.innerHTML = resultHTML;
-
-    // Opcional: Adicionar botão de download novamente aqui, se quiser
-    downloadArea.innerHTML = `
-        <button onclick="document.getElementById('generate-btn').click()" class="generate-button" style="margin-top: 1rem;">
-            <span class="button-icon">⬇️</span>
-            <span class="button-text">Baixar Novamente</span>
-        </button>
-    `;
-
-    // Mostrar a seção de resultados
-    resultsSection.classList.remove('hidden');
-}
+    });
 
     // Auto-resize do textarea
     urlInput.addEventListener('input', function() {
@@ -409,4 +381,3 @@ function showResults(results, stats) {
         }
     }, 3000);
 });
-
