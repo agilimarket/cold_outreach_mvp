@@ -3,7 +3,10 @@ class ColdOutreachGenerator {
     constructor() {
         this.processedUrls = [];
         this.ignoredUrls = [];
+        this.allUrls = []; // Todas as URLs, incluindo as não processadas ainda
+        this.currentIndex = 0; // Índice da URL atual sendo processada
         this.isProcessing = false;
+        this.isPaused = false;
     }
 
     // Extrai o nome da loja a partir da URL
@@ -41,48 +44,56 @@ class ColdOutreachGenerator {
         }
     }
 
-    // A função analyzeStore será substituída pela chamada à API do backend
-    async analyzeStore(url) {
-        try {
-            const response = await fetch('/analyze', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ url: url })
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Erro ao analisar URL no backend:', error);
-            return null;
+    // Aplica regras de análise simulada
+    analyzeStore(storeName) {
+        const lowerName = storeName.toLowerCase();
+        
+        if (lowerName.includes('vest')) {
+            return {
+                contato: 'Mariana',
+                conquista: 'Coleção nova com storytelling emocional e ótimo feedback de clientes',
+                oportunidade: 'Reels com menos de 500 visualizações — potencial não explorado'
+            };
+        } else if (lowerName.includes('praia') || lowerName.includes('beach')) {
+            return {
+                contato: 'Carolina',
+                conquista: 'Fotos em cenários tropicais com alto engajamento visual',
+                oportunidade: 'Ausência de TikTok e poucas respostas a DMs'
+            };
+        } else {
+            return {
+                contato: `Time da ${storeName}`,
+                conquista: 'Lançamento recente com bom engajamento nos comentários',
+                oportunidade: 'Baixo uso de Reels e ausência de link otimizado na bio'
+            };
         }
     }
 
     // Gera a mensagem personalizada
-    generateMessage(analysis) {
-        const template = `Oi, ${analysis.contact_person},
+    generateMessage(storeName, analysis) {
+        const template = `Oi, ${analysis.contato},
 
-Nós da DataFashion Marketing notamos o trabalho de vocês em ${analysis.store_name}. ${analysis.conquista}
+Adorei o que vocês estão fazendo com ${storeName} — especialmente ${analysis.conquista}. Isso gera conexão genuína.
 
-Identificamos que há uma grande oportunidade para ${analysis.oportunidade} Podemos ajudar a destravar esse potencial.
+Percebi, porém, que ${analysis.oportunidade}. É comum — mas é oportunidade escondida para aumentar conversões.
 
-Que tal conversarmos por 15 minutos para mostrar como podemos impulsionar suas vendas online?
+Na DataFashion Marketing, ajudamos marcas como a sua a aumentar vendas online e ROI de anúncios.
 
-Agende aqui: calendly.com/datafashion/15min
+Em 15 min, mostro onde está travando e como destravar.
 
-Atenciosamente,
-Equipe DataFashion Marketing
-`;
+Agende aqui: calendly.com/seunome/15min
+
+Para uma análise ainda mais precisa e personalizada do seu negócio, que tal preencher nosso formulário rápido? Assim, podemos entender melhor seu estado atual e como podemos te ajudar a crescer ainda mais: [LINK_PARA_SEU_FORMULARIO_ONLINE_AQUI]
+
+Com carinho e dados,
+[Seu_Nome]
+Especialista em Tráfego & SEO para Moda`;
 
         return template;
     }
 
     // Processa uma única URL
-    async processUrl(url) {
+    processUrl(url) {
         const trimmedUrl = url.trim();
         
         if (!trimmedUrl || !this.isValidUrl(trimmedUrl)) {
@@ -90,34 +101,21 @@ Equipe DataFashion Marketing
             return null;
         }
 
-        const analysis = await this.analyzeStore(trimmedUrl);
-        if (!analysis) {
+        const storeName = this.extractStoreName(trimmedUrl);
+        if (!storeName) {
             this.ignoredUrls.push(trimmedUrl);
             return null;
         }
 
-        const message = this.generateMessage(analysis);
+        const analysis = this.analyzeStore(storeName);
+        const message = this.generateMessage(storeName, analysis);
 
         const result = {
             url: trimmedUrl,
-            store_name: analysis.store_name,
-            contact_person: analysis.contact_person,
-            title: analysis.title,
-            description: analysis.description,
-            keywords: analysis.keywords,
-            og_image: analysis.og_image,
-            instagram_link: analysis.instagram_link,
-            facebook_link: analysis.facebook_link,
-            twitter_link: analysis.twitter_link,
-            linkedin_link: analysis.linkedin_link,
-            youtube_link: analysis.youtube_link,
-            tiktok_link: analysis.tiktok_link,
-            estimated_traffic: analysis.estimated_traffic,
-            seo_score: analysis.seo_score,
-            has_blog: analysis.has_blog,
+            contato: analysis.contato,
             conquista: analysis.conquista,
             oportunidade: analysis.oportunidade,
-            cold_outreach_message: message
+            mensagem: message
         };
 
         this.processedUrls.push(result);
@@ -128,22 +126,45 @@ Equipe DataFashion Marketing
     async processUrls(urlList) {
         this.processedUrls = [];
         this.ignoredUrls = [];
+        this.allUrls = urlList.split(\'\\n\').filter(url => url.trim());
+        this.currentIndex = 0;
         this.isProcessing = true;
+        this.isPaused = false;
 
-        const urls = urlList.split('\n').filter(url => url.trim());
-        
-        for (let i = 0; i < urls.length; i++) {
-            this.processUrl(urls[i]);
-            
-            // Simula processamento assíncrono
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Atualiza progresso
-            this.updateProgress(i + 1, urls.length);
-        }
+        await this._processUrlsInternal();
 
         this.isProcessing = false;
         return this.processedUrls;
+    }
+
+    async _processUrlsInternal() {
+        while (this.currentIndex < this.allUrls.length && this.isProcessing && !this.isPaused) {
+            const url = this.allUrls[this.currentIndex];
+            try {
+                const result = this.processUrl(url);
+                if (result) {
+                    // A URL já é adicionada a processedUrls dentro de processUrl
+                }
+            } catch (error) {
+                console.error(`Erro ao processar URL ${url}:`, error);
+                this.ignoredUrls.push(url); // Adiciona a URL com erro às ignoradas
+            }
+            this.currentIndex++;
+            this.updateProgress(this.currentIndex, this.allUrls.length);
+            await new Promise(resolve => setTimeout(resolve, 100)); // Simula processamento assíncrono
+        }
+    }
+
+    pause() {
+        this.isPaused = true;
+        this.isProcessing = false;
+    }
+
+    async resume() {
+        this.isPaused = false;
+        this.isProcessing = true;
+        await this._processUrlsInternal();
+        this.isProcessing = false;
     }
 
     // Atualiza o progresso na interface
@@ -163,34 +184,16 @@ Equipe DataFashion Marketing
 
     // Gera CSV
     generateCSV(data) {
-        const headers = [
-            'URL', 'Nome da Loja', 'Pessoa de Contato', 'Título do Site', 'Descrição do Site', 'Keywords do Site',
-            'Imagem OG', 'Link Instagram', 'Link Facebook', 'Link Twitter', 'Link LinkedIn', 'Link YouTube', 'Link TikTok',
-            'Tráfego Estimado', 'Score SEO', 'Tem Blog', 'Conquistas', 'Oportunidades', 'Mensagem Cold Outreach'
-        ];
+        const headers = ['URL', 'Contato', 'Conquista', 'Oportunidade', 'Mensagem'];
         const csvContent = [headers.join(',')];
 
         data.forEach(row => {
             const csvRow = [
                 `"${row.url}"`,
-                `"${row.store_name || ''}"`,
-                `"${row.contact_person || ''}"`,
-                `"${row.title || ''}"`,
-                `"${row.description ? row.description.replace(/"/g, '""') : ''}"`,
-                `"${row.keywords || ''}"`,
-                `"${row.og_image || ''}"`,
-                `"${row.instagram_link || ''}"`,
-                `"${row.facebook_link || ''}"`,
-                `"${row.twitter_link || ''}"`,
-                `"${row.linkedin_link || ''}"`,
-                `"${row.youtube_link || ''}"`,
-                `"${row.tiktok_link || ''}"`,
-                `"${row.estimated_traffic || ''}"`,
-                `"${row.seo_score || ''}"`,
-                `"${row.has_blog || ''}"`,
-                `"${row.conquista ? row.conquista.replace(/"/g, '""') : ''}"`,
-                `"${row.oportunidade ? row.oportunidade.replace(/"/g, '""') : ''}"`,
-                `"${row.cold_outreach_message ? row.cold_outreach_message.replace(/"/g, '""').replace(/\n/g, '\\n') : ''}"`
+                `"${row.contato}"`,
+                `"${row.conquista}"`,
+                `"${row.oportunidade}"`,
+                `"${row.mensagem.replace(/"/g, '""').replace(/\n/g, '\\n')}"`
             ];
             csvContent.push(csvRow.join(','));
         });
@@ -228,53 +231,82 @@ Equipe DataFashion Marketing
 document.addEventListener('DOMContentLoaded', function() {
     const generator = new ColdOutreachGenerator();
     const urlInput = document.getElementById('urls-input');
-    const processBtn = document.getElementById('generate-btn');
+    const generateBtn = document.getElementById('generate-btn');
+    const pauseResumeBtn = document.getElementById('pause-resume-btn');
     const statusDiv = document.getElementById('status-display');
+    const progressBarFill = document.querySelector('#progress-bar .progress-fill');
     const progressContainer = document.getElementById('progress-bar');
-    const resultContainer = document.getElementById('results-section');
+    const resultsSection = document.getElementById('results-section');
 
-    // Event listener para o botão de processar
-    processBtn.addEventListener('click', async function() {
+    // Event listener para o botão de Gerar
+    generateBtn.addEventListener(\'click\', async function() {
         const urls = urlInput.value.trim();
         
         if (!urls) {
-            showStatus('Por favor, insira pelo menos uma URL.', 'error');
+            showStatus(\'Por favor, insira pelo menos uma URL.\', \'error\');
             return;
         }
 
-        // Desabilita o botão e mostra progresso
-        processBtn.disabled = true;
-        processBtn.textContent = 'Processando...';
-        progressContainer.classList.remove('hidden');
-        resultContainer.classList.add('hidden');
+        // Resetar estado para nova análise
+        generator.processedUrls = [];
+        generator.ignoredUrls = [];
+        generator.currentIndex = 0;
+        generator.isPaused = false;
+
+        generateBtn.classList.add(\'hidden\');
+        pauseResumeBtn.classList.remove(\'hidden\');
+        pauseResumeBtn.innerHTML = \'<span class="button-icon">⏸️</span><span class="button-text">Pausar</span>\';
+        pauseResumeBtn.style.background = \'var(--warning-gradient)\';
         
+        statusDiv.classList.remove(\'success\', \'error\');
+        statusDiv.classList.add(\'processing\');
+        showStatus(\'Iniciando processamento...\', \'processing\');
+        progressBarFill.style.width = \'0%\';
+        progressContainer.classList.remove(\'hidden\');
+        resultsSection.classList.add(\'hidden\');
+
+        await startProcessing(urls);
+    });
+
+    // Event listener para o botão de Pausar/Retomar
+    pauseResumeBtn.addEventListener(\'click\', async function() {
+        if (generator.isProcessing) {
+            generator.pause();
+            pauseResumeBtn.innerHTML = \'<span class="button-icon">▶️</span><span class="button-text">Retomar</span>\';
+            pauseResumeBtn.style.background = \'var(--success-gradient)\';
+            showStatus(\'Processamento pausado.\', \'warning\');
+        } else if (generator.isPaused) {
+            generator.resume();
+            pauseResumeBtn.innerHTML = \'<span class="button-icon">⏸️</span><span class="button-text">Pausar</span>\';
+            pauseResumeBtn.style.background = \'var(--warning-gradient)\';
+            showStatus(\'Retomando processamento...\', \'processing\');
+        }
+    });
+
+    async function startProcessing(urls) {
         try {
-            // Processa as URLs
-            const results = await generator.processUrls(urls);
+            await generator.processUrls(urls);
             const stats = generator.getStats();
             
-            if (results.length > 0) {
-                // Gera e faz download do CSV
-                const csvContent = generator.generateCSV(results);
+            if (generator.processedUrls.length > 0) {
+                const csvContent = generator.generateCSV(generator.processedUrls);
                 generator.downloadCSV(csvContent);
-                
-                // Mostra resultado
-                showStatus(`✅ Pronto! CSV baixado. ${stats.processed} processadas com sucesso. ${stats.ignored} ignoradas.`, 'success');
-                showResults(results, stats);
+                showStatus(`✅ Pronto! CSV baixado. ${stats.processed} processadas com sucesso. ${stats.ignored} ignoradas.`, \'success\');
+                showResults(generator.processedUrls, stats);
             } else {
-                showStatus('❌ Nenhuma URL válida foi encontrada.', 'error');
+                showStatus(\'❌ Nenhuma URL válida foi encontrada.\', \'error\');
             }
             
         } catch (error) {
-            showStatus('❌ Erro durante o processamento. Tente novamente.', 'error');
-            console.error('Erro:', error);
+            showStatus(\'❌ Erro durante o processamento. Tente novamente.\', \'error\');
+            console.error(\'Erro:\', error);
         } finally {
-            // Reabilita o botão
-            processBtn.disabled = false;
-            processBtn.textContent = '🚀 Analisar e Gerar CSV';
-            progressContainer.classList.add('hidden');
+            generateBtn.classList.remove(\'hidden\');
+            pauseResumeBtn.classList.add(\'hidden\');
+            progressContainer.classList.add(\'hidden\');
+            statusDiv.classList.remove(\'processing\', \'warning\');
         }
-    });
+    }
 
     // Função para mostrar status
     function showStatus(message, type) {
@@ -321,18 +353,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${results.slice(0, 3).map(result => `
                         <div class="preview-item">
                             <div class="preview-header">
-                                <strong>${result.store_name || result.url}</strong>
-                                <span class="contact-badge">${result.contact_person}</span>
-                            </div>
-                            <div class="preview-details">
-                                <p><strong>Título:</strong> ${result.title || 'N/A'}</p>
-                                <p><strong>Descrição:</strong> ${result.description ? result.description.substring(0, 100) + '...' : 'N/A'}</p>
-                                <p><strong>Instagram:</strong> ${result.instagram_link || 'N/A'}</p>
-                                <p><strong>SEO Score:</strong> ${result.seo_score || 'N/A'}</p>
-                                <p><strong>Oportunidade:</strong> ${result.oportunidade || 'N/A'}</p>
+                                <strong>${result.url}</strong>
+                                <span class="contact-badge">${result.contato}</span>
                             </div>
                             <div class="preview-message">
-                                ${result.cold_outreach_message ? result.cold_outreach_message.substring(0, 150) + '...' : 'N/A'}
+                                ${result.mensagem.substring(0, 150)}...
                             </div>
                         </div>
                     `).join('')}
