@@ -126,7 +126,7 @@ Especialista em Tráfego & SEO para Moda`;
     async processUrls(urlList) {
         this.processedUrls = [];
         this.ignoredUrls = [];
-        this.allUrls = urlList.split(\'\\n\').filter(url => url.trim());
+        this.allUrls = urlList.split('\\n').filter(url => url.trim());
         this.currentIndex = 0;
         this.isProcessing = true;
         this.isPaused = false;
@@ -239,47 +239,47 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsSection = document.getElementById('results-section');
 
     // Event listener para o botão de Gerar
-    generateBtn.addEventListener(\'click\', async function() {
-        const urls = urlInput.value.trim();
-        
-        if (!urls) {
-            showStatus(\'Por favor, insira pelo menos uma URL.\', \'error\');
-            return;
-        }
+    generateBtn.addEventListener('click', async function() {
+    const urls = urlInput.value.trim();
+    
+    if (!urls) {
+        showStatus('Por favor, insira pelo menos uma URL.', 'error');
+        return;
+    }
 
-        // Resetar estado para nova análise
-        generator.processedUrls = [];
-        generator.ignoredUrls = [];
-        generator.currentIndex = 0;
-        generator.isPaused = false;
+    // Resetar estado para nova análise
+    generator.processedUrls = [];
+    generator.ignoredUrls = [];
+    generator.currentIndex = 0;
+    generator.isPaused = false;
 
-        generateBtn.classList.add(\'hidden\');
-        pauseResumeBtn.classList.remove(\'hidden\');
-        pauseResumeBtn.innerHTML = \'<span class="button-icon">⏸️</span><span class="button-text">Pausar</span>\';
-        pauseResumeBtn.style.background = \'var(--warning-gradient)\';
-        
-        statusDiv.classList.remove(\'success\', \'error\');
-        statusDiv.classList.add(\'processing\');
-        showStatus(\'Iniciando processamento...\', \'processing\');
-        progressBarFill.style.width = \'0%\';
-        progressContainer.classList.remove(\'hidden\');
-        resultsSection.classList.add(\'hidden\');
+    generateBtn.classList.add('hidden');
+    pauseResumeBtn.classList.remove('hidden');
+    pauseResumeBtn.innerHTML = '<span class="button-icon">⏸️</span><span class="button-text">Pausar</span>';
+    pauseResumeBtn.style.background = 'var(--warning-gradient)';
+    
+    statusDiv.classList.remove('success', 'error');
+    statusDiv.classList.add('processing');
+    showStatus('Iniciando processamento...', 'processing');
+    progressBarFill.style.width = '0%';
+    progressContainer.classList.remove('hidden');
+    resultsSection.classList.add('hidden');
 
-        await startProcessing(urls);
-    });
+    await startProcessing(urls);
+});
 
-    // Event listener para o botão de Pausar/Retomar
-    pauseResumeBtn.addEventListener(\'click\', async function() {
-        if (generator.isProcessing) {
-            generator.pause();
-            pauseResumeBtn.innerHTML = \'<span class="button-icon">▶️</span><span class="button-text">Retomar</span>\';
-            pauseResumeBtn.style.background = \'var(--success-gradient)\';
-            showStatus(\'Processamento pausado.\', \'warning\');
-        } else if (generator.isPaused) {
-            generator.resume();
-            pauseResumeBtn.innerHTML = \'<span class="button-icon">⏸️</span><span class="button-text">Pausar</span>\';
-            pauseResumeBtn.style.background = \'var(--warning-gradient)\';
-            showStatus(\'Retomando processamento...\', \'processing\');
+// Event listener para o botão de Pausar/Retomar
+pauseResumeBtn.addEventListener('click', async function() {
+    if (generator.isProcessing) {
+        generator.pause();
+        pauseResumeBtn.innerHTML = '<span class="button-icon">▶️</span><span class="button-text">Retomar</span>';
+        pauseResumeBtn.style.background = 'var(--success-gradient)';
+        showStatus('Processamento pausado.', 'warning');
+    } else if (generator.isPaused) {
+        generator.resume();
+        pauseResumeBtn.innerHTML = '<span class="button-icon">⏸️</span><span class="button-text">Pausar</span>';
+        pauseResumeBtn.style.background = 'var(--warning-gradient)';
+        showStatus('Retomando processamento...', 'processing');
         }
     });
 
@@ -291,20 +291,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (generator.processedUrls.length > 0) {
                 const csvContent = generator.generateCSV(generator.processedUrls);
                 generator.downloadCSV(csvContent);
-                showStatus(`✅ Pronto! CSV baixado. ${stats.processed} processadas com sucesso. ${stats.ignored} ignoradas.`, \'success\');
+                showStatus(`✅ Pronto! CSV baixado. ${stats.processed} processadas com sucesso. ${stats.ignored} ignoradas.`, 'success');
                 showResults(generator.processedUrls, stats);
             } else {
-                showStatus(\'❌ Nenhuma URL válida foi encontrada.\', \'error\');
+                showStatus('❌ Nenhuma URL válida foi encontrada.', 'error');
             }
             
         } catch (error) {
-            showStatus(\'❌ Erro durante o processamento. Tente novamente.\', \'error\');
-            console.error(\'Erro:\', error);
+            showStatus('❌ Erro durante o processamento. Tente novamente.', 'error');
+            console.error('Erro:', error);
         } finally {
-            generateBtn.classList.remove(\'hidden\');
-            pauseResumeBtn.classList.add(\'hidden\');
-            progressContainer.classList.add(\'hidden\');
-            statusDiv.classList.remove(\'processing\', \'warning\');
+            generateBtn.classList.remove('hidden');
+            pauseResumeBtn.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            statusDiv.classList.remove('processing', 'warning');
         }
     }
 
