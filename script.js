@@ -26,7 +26,7 @@ class ColdOutreachGenerator {
         }
     }
 
-    isValidUrl(url) {
+ /*     isValidUrl(url) {
         try {
             const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
             const instagramPattern = /^(https?:\/\/)?(www\.)?instagram\.com\/[\w\.]+\/?$/;
@@ -36,6 +36,28 @@ class ColdOutreachGenerator {
             return false;
         }
     }
+ */
+
+/**
+ * Valida se a string fornecida é uma URL válida.
+ * @param {string} urlString - A string a ser validada.
+ * @returns {boolean} - True se for uma URL válida, false caso contrário.
+ */
+isValidUrl(urlString) {
+    // Trata casos onde a URL não tem protocolo
+    // Adiciona 'https://' se não houver protocolo
+    const urlToTest = urlString.startsWith('http') ? urlString : `https://${urlString}`;
+
+    try {
+        // O construtor URL lançará um erro se a URL for inválida
+        new URL(urlToTest);
+        return true;
+    } catch (error) {
+        // Se houver erro na criação da URL, ela é inválida
+        // console.warn(`URL inválida detectada: ${urlString}`); // Opcional para debug
+        return false;
+    }
+}
 
     analyzeStore(storeName) {
         const lowerName = storeName.toLowerCase();
@@ -133,7 +155,7 @@ Especialista em Tráfego & SEO para Moda`;
                 this.processUrl(url);
             } catch (error) {
                 console.error(`Erro ao processar URL ${url}:`, error);
-                this.ignoredUrls.push(url);
+                this.ignoredUrls.push({ url, error: error.message }); // resgistra erro para depuração
             }
             this.currentIndex++;
             this.updateProgress(this.currentIndex, this.allUrls.length);
