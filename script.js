@@ -326,49 +326,67 @@ pauseResumeBtn.addEventListener('click', async function() {
         }
     }
 
-    // Função para mostrar resultados
-    function showResults(results, stats) {
-        const resultHTML = `
-            <h3 class="results-title">📊 Resumo do Processamento</h3>
-            <div class="results-summary">
-                <div class="stats">
-                    <div class="stat-item">
-                        <span class="stat-number">${stats.processed}</span>
-                        <span class="stat-label">URLs Processadas</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">${stats.ignored}</span>
-                        <span class="stat-label">URLs Ignoradas</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">${stats.total}</span>
-                        <span class="stat-label">Total</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="preview-section">
-                <h4>👀 Preview das Mensagens</h4>
-                <div class="preview-list">
-                    ${results.slice(0, 3).map(result => `
-                        <div class="preview-item">
-                            <div class="preview-header">
-                                <strong>${result.url}</strong>
-                                <span class="contact-badge">${result.contato}</span>
-                            </div>
-                            <div class="preview-message">
-                                ${result.mensagem.substring(0, 150)}...
-                            </div>
-                        </div>
-                    `).join('')}
-                    ${results.length > 3 ? `<div class="preview-more">E mais ${results.length - 3} mensagens...</div>` : ''}
-                </div>
-            </div>
-        `;
-        
-        resultContainer.innerHTML = resultHTML;
-        resultContainer.classList.remove('hidden');
+    // Função para mostrar resultados — CORRIGIDA
+function showResults(results, stats) {
+    const resultsSummary = document.getElementById('results-summary');
+    const downloadArea = document.getElementById('download-area');
+
+    if (!resultsSummary) {
+        console.error('Elemento #results-summary não encontrado.');
+        return;
     }
+
+    const resultHTML = `
+        <div class="results-stats">
+            <h4>📊 Resumo do Processamento</h4>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">${stats.processed}</div>
+                    <div class="stat-label">Processadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.ignored}</div>
+                    <div class="stat-label">Ignoradas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.total}</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-section">
+            <h4>👀 Preview das Mensagens (primeiras 3)</h4>
+            <div class="preview-list">
+                ${results.slice(0, 3).map(result => `
+                    <div class="preview-item">
+                        <div class="preview-header">
+                            <strong>${result.url}</strong>
+                            <span class="contact-badge">${result.contato}</span>
+                        </div>
+                        <div class="preview-message">
+                            ${result.mensagem.replace(/\n/g, '<br>').substring(0, 200)}...
+                        </div>
+                    </div>
+                `).join('')}
+                ${results.length > 3 ? `<div class="preview-more">+ ${results.length - 3} mensagens no CSV</div>` : ''}
+            </div>
+        </div>
+    `;
+
+    resultsSummary.innerHTML = resultHTML;
+
+    // Opcional: Adicionar botão de download novamente aqui, se quiser
+    downloadArea.innerHTML = `
+        <button onclick="document.getElementById('generate-btn').click()" class="generate-button" style="margin-top: 1rem;">
+            <span class="button-icon">⬇️</span>
+            <span class="button-text">Baixar Novamente</span>
+        </button>
+    `;
+
+    // Mostrar a seção de resultados
+    resultsSection.classList.remove('hidden');
+}
 
     // Auto-resize do textarea
     urlInput.addEventListener('input', function() {
